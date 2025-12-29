@@ -54,7 +54,7 @@ class AudioClient:
         filename = os.path.join(self.temp_directory, f"{track_id}.m4a")
 
         # if track alr exists, return filename
-        if os.path.exists(self.temp_directory):
+        if os.path.exists(filename):
             return filename
 
         try:
@@ -66,7 +66,7 @@ class AudioClient:
             print(f"Error downloading preview: {e}")
             return None
 
-    def extract_features(self, file_path):
+    def extract_features(self, file_path, duration=30):
         """
         Extracts Mel-Frequency Cepstral Coefficients (MFCCs) and tempo
         from the audio file
@@ -75,7 +75,7 @@ class AudioClient:
             # librosa.load decodes the audio
             # then resamples it to 22050 Hz to analyze texture
             # then mixes to mono
-            raw_waveform, sample_rate = librosa.load(file_path, duration=30)
+            raw_waveform, sample_rate = librosa.load(file_path, duration=duration)
 
             # find when notes start (onsets)
             # this creates a graph of energy spikes over the sample
@@ -104,3 +104,16 @@ class AudioClient:
         finally:
             if os.path.exists(file_path):
                 os.remove(file_path)
+
+
+if __name__ == "__main__":
+    client = AudioClient()
+
+    # Example usage
+    tracks = client.search_tracks("Imagine Dragons", limit=3)
+    for track in tracks:
+        print(f"Downloading preview for: {track['trackName']} by {track['artistName']}")
+        file_path = client.download_preview(track["previewUrl"], track["trackId"])
+        if file_path:
+            features = client.extract_features(file_path)
+            print(f"Extracted features: {features}")
