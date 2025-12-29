@@ -1,6 +1,8 @@
 import os
 import requests
 import warnings
+import librosa
+import numpy as np
 
 warnings.filterwarnings("ignore")
 
@@ -63,3 +65,42 @@ class AudioClient:
         except Exception as e:
             print(f"Error downloading preview: {e}")
             return None
+
+    def extract_features(self, file_path):
+        """
+        Extracts Mel-Frequency Cepstral Coefficients (MFCCs) and tempo
+        from the audio file
+        """
+        try:
+            # librosa.load decodes the audio
+            # then resamples it to 22050 Hz to analyze texture
+            # then mixes to mono
+            raw_waveform, sample_rate = librosa.load(file_path, duration=30)
+
+            # find when notes start (onsets)
+            # this creates a graph of energy spikes over the sample
+            onset = librosa.onset.onset_strength(y=raw_waveform, sr=sample_rate)
+
+            # finds potential tempos of the song
+            tempo = librosa.beat.tempo(onset_envelope=onset, sr=sample_rate)[0]
+
+            # MFCCs (Mel-Frequency Cepstral Coefficients) describes the shape of the sound spectrum
+            mfcc = librosa.feature.mfcc(y=raw_waveform, sr=sample_rate, n_mfcc=13)
+
+            # flatten 2d mfcc grid to average across time
+            mfcc_flatten_mean = np.mean(mfcc, axis=1)
+
+            # create dict
+            features = {
+                "tempo": float(tempo),
+                # dictionary comprehension to unpack the grid
+                **{f"mfcc_{i+1}": float(m) for i, m in enumerate(mfcc_flatten_mean)},
+            }
+
+            return features
+        except Exception as e:
+            print(f"Error extracting features from {file_path}: {e}")
+            return None
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
