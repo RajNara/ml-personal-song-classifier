@@ -9,7 +9,7 @@ import joblib
 
 class ModelTrainer:
     def __init__(self):
-        self.models_dir = "models"
+        self.models_dir = "../models"
         self.model_path = os.path.join(self.models_dir, "music_classifier.pkl")
         self.scaler_path = os.path.join(self.models_dir, "scaler.pkl")
 
