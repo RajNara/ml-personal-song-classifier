@@ -59,6 +59,14 @@ class ModelTrainer:
         y_pred = model.predict(X_test_scaled)
         accuracy_score_val = accuracy_score(y_test, y_pred)
 
+        from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
+
+        print("CV accuracy:", scores)
+        print("Mean:", scores.mean(), "Std:", scores.std())
+
         print("Training complete.")
         print(f"Accuracy: {accuracy_score_val:.4f}")
 

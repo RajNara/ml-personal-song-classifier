@@ -9,25 +9,26 @@ from audio_client import AudioClient
 LIKED_ARTISTS = [
     "Playboi Carti",
     "Drake",
-    "Kendrick Lamar",
-    "J. Cole",
-    "Travis Scott",
-    "Lil Uzi Vert",
-    "Post Malone",
     "21 Savage",
-    "Lil Baby",
+    "Key Glock",
+    "Anirudh Ravichander",
+    "Yeat",
+    "Lil Uzi Vert",
+    "Santhosh Narayanan",
+    "Lil Tecca",
+    "Hiphop Tamizha",
 ]
 
 DISLIKED_ARTISTS = [
     "Nickelback",
-    "Justin Bieber",
     "Rebecca Black",
     "Limp Bizkit",
     "Insane Clown Posse",
-    "Soulja Boy",
     "Hanson",
     "Celine Dion",
     "Rebecca Black",
+    "Johann Sebastian Bach",
+    "William Basinski",
 ]
 
 client = AudioClient()
@@ -57,11 +58,10 @@ def ingest_data():
 
 
 def process_artists(artist_list, label):
-    count = 0
     dataset = []
     for artist in artist_list:
         print(f"\n Searching for {artist}")
-        tracks = client.search_tracks(artist, limit=5)
+        tracks = client.search_tracks(artist, limit=15)
 
         for track in tracks:
             print(f" -- processing: {track['trackName']}", end=" ", flush=True)

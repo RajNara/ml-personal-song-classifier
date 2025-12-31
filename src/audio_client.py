@@ -20,6 +20,17 @@ class AudioClient:
         if not os.path.exists(self.temp_directory):
             os.makedirs(self.temp_directory)
 
+    def summarize_data(self, x, prefix):
+        """
+        Compute mean, standard deviation, max and min for a data entry array
+        """
+        return {
+            f"{prefix}_mean": float(np.mean(x)),
+            f"{prefix}_std": float(np.std(x)),
+            f"{prefix}_min": float(np.min(x)),
+            f"{prefix}_max": float(np.max(x)),
+        }
+
     def search_tracks(self, query, limit=5):
         """
         Searches for audio tracks using the ITunes Search API.
@@ -77,25 +88,86 @@ class AudioClient:
             # then mixes to mono
             raw_waveform, sample_rate = librosa.load(file_path, duration=duration)
 
+            features = {}
+
+            # -- rhythm --
             # find when notes start (onsets)
             # this creates a graph of energy spikes over the sample
             onset = librosa.onset.onset_strength(y=raw_waveform, sr=sample_rate)
 
             # finds potential tempos of the song
             tempo = librosa.beat.tempo(onset_envelope=onset, sr=sample_rate)[0]
+            features["tempo"] = float(tempo)
 
+            beat_frames = librosa.beat.beat_track(onset_envelope=onset, sr=sample_rate)[
+                1
+            ]
+
+            if len(beat_frames) > 1:
+                beat_times = librosa.frames_to_time(beat_frames, sr=sample_rate)
+                beat_intervals = np.diff(beat_times)
+                features.update(self.summarize_data(beat_intervals, "beat_interval"))
+            else:
+                features.update(
+                    {
+                        "beat_interval_mean": 0.0,
+                        "beat_interval_std": 0.0,
+                        "beat_interval_min": 0.0,
+                        "beat_interval_max": 0.0,
+                    }
+                )
+
+            # -- MFCCs and deltas --
             # MFCCs (Mel-Frequency Cepstral Coefficients) describes the shape of the sound spectrum
             mfcc = librosa.feature.mfcc(y=raw_waveform, sr=sample_rate, n_mfcc=13)
+            mfcc_delta = librosa.feature.delta(mfcc)
+            mfcc_delta_2 = librosa.feature.delta(mfcc, order=2)
 
-            # flatten 2d mfcc grid to average across time
-            mfcc_flatten_mean = np.mean(mfcc, axis=1)
+            for i in range(mfcc.shape[0]):
+                features.update(self.summarize_data(mfcc[i], f"mfcc_{i+1}"))
+                features.update(self.summarize_data(mfcc_delta[i], f"mfcc_delta_{i+1}"))
+                features.update(
+                    self.summarize_data(mfcc_delta_2[i], f"mfcc_delta_2_{i+1}")
+                )
 
-            # create dict
-            features = {
-                "tempo": float(tempo),
-                # dictionary comprehension to unpack the grid
-                **{f"mfcc_{i+1}": float(m) for i, m in enumerate(mfcc_flatten_mean)},
-            }
+            # -- spectral features --
+            spectral_centroid = librosa.feature.spectral_centroid(
+                y=raw_waveform, sr=sample_rate
+            )[0]
+            spectral_bandwidth = librosa.feature.spectral_bandwidth(
+                y=raw_waveform, sr=sample_rate
+            )[0]
+            spectral_rolloff = librosa.feature.spectral_rolloff(
+                y=raw_waveform, sr=sample_rate
+            )
+            spectral_contrast = librosa.feature.spectral_contrast(
+                y=raw_waveform, sr=sample_rate
+            )
+
+            features.update(self.summarize_data(spectral_centroid, "spectral_centriod"))
+            features.update(
+                self.summarize_data(spectral_bandwidth, "spectral_bandwidth")
+            )
+            features.update(self.summarize_data(spectral_rolloff, "spectral_rolloff"))
+
+            for i in range(spectral_contrast.shape[0]):
+                features.update(
+                    self.summarize_data(
+                        spectral_contrast[i], f"spectral_contrast_{i+1}"
+                    )
+                )
+
+            # -- harmonics and pitch --
+            chroma = librosa.feature.chroma_stft(y=raw_waveform, sr=sample_rate)
+            for i in range(chroma.shape[0]):
+                features.update(self.summarize_data(chroma[i], f"chroma_{i+1}"))
+
+            # -- energy and dynamics --
+            root_mean_square_value = librosa.feature.rms(y=raw_waveform)[0]
+            zero_crossing_rate = librosa.feature.zero_crossing_rate(y=raw_waveform)[0]
+
+            features.update(self.summarize_data(root_mean_square_value, "rms"))
+            features.update(self.summarize_data(zero_crossing_rate, "zcr"))
 
             return features
         except Exception as e:
