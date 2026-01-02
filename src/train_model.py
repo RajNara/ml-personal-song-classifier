@@ -7,76 +7,47 @@ from sklearn.metrics import accuracy_score, classification_report
 import joblib
 
 
-class ModelTrainer:
-    def __init__(self):
-        self.models_dir = "../models"
-        self.model_path = os.path.join(self.models_dir, "music_classifier.pkl")
-        self.scaler_path = os.path.join(self.models_dir, "scaler.pkl")
+def train_model_in_memory(self, df):
+    """
+    Trains a model in-memory
+    Args:
+        df (pd.DataFrame): The training data
+    Returns:
+        model, scaler: The trained objects
+    """
+    if df is None or len(df) < 2:
+        print("Not enough data to train")
+        return None, None
 
-        os.makedirs(self.models_dir, exist_ok=True)
+    try:
+        # remove metadata info
+        # TODO: maybe use artist to inform model later?
+        metadata_cols = [
+            "track_name",
+            "artist",
+            "track_id",
+            "preview_url",
+            "filename",
+            "label",
+        ]
+        existing_cols = [col for col in metadata_cols if col in df.columns]
 
-    def load_and_clean_data(self, filepath):
-        """
-        Loads CSV and cleans the data
-        """
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"The file {filepath} does not exist.")
-
-        df = pd.read_csv(filepath)
-        print(f"Loaded len{df} songs ")
-
-        drop_columns = ["track_name", "artist", "track_id", "preview_url", "filename"]
-        existing_drop_columns = [col for col in drop_columns if col in df.columns]
-        clean_df = df.drop(columns=existing_drop_columns)
-
-        return clean_df
-
-    def train_model(self, data_path):
-        """
-        Trains a RandomForestClassifier on the provided data
-        """
-        df = self.load_and_clean_data(data_path)
-
-        # label is the target variable
-        X = df.drop(columns=["label"])
+        # features
+        X = df.drop(columns=existing_cols)
+        # target var
         y = df["label"]
 
-        # split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
-        )
-
-        # scale features
+        # scale data
         scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
+        X_scaled = scaler.fit_transform(X)
 
-        print("Training Random Forest Model...")
-        model = RandomForestClassifier(n_estimators=100, random_state=42)
-        model.fit(X_train_scaled, y_train)
+        # hyperparameters from optimization.py
+        model = RandomForestClassifier(
+            n_estimators=250, max_depth=6, min_samples_split=10, random_state=42
+        )
+        model.fit(X_scaled, y)
 
-        # evaluate model
-        y_pred = model.predict(X_test_scaled)
-        accuracy_score_val = accuracy_score(y_test, y_pred)
-
-        from sklearn.model_selection import StratifiedKFold, cross_val_score
-
-        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-        scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
-
-        print("CV accuracy:", scores)
-        print("Mean:", scores.mean(), "Std:", scores.std())
-
-        print("Training complete.")
-        print(f"Accuracy: {accuracy_score_val:.4f}")
-
-        print(classification_report(y_test, y_pred))
-
-        # save model and scaler
-        joblib.dump(model, self.model_path)
-        joblib.dump(scaler, self.scaler_path)
-
-
-if __name__ == "__main__":
-    trainer = ModelTrainer()
-    trainer.train_model("../data/raw/training_data.csv")
+        return model, scaler
+    except Exception as e:
+        print(f"Error in training model : {e}")
+        return None, None
