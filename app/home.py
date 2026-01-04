@@ -20,7 +20,6 @@ apply_global_styles()
 apply_landing_page_styles()
 add_home_music_line()
 
-
 if "user_data" not in st.session_state:
     st.session_state.user_data = pd.DataFrame()
 if "model" not in st.session_state:
@@ -28,18 +27,16 @@ if "model" not in st.session_state:
 if "scaler" not in st.session_state:
     st.session_state.scaler = None
 
-
 st.markdown(
     """
-    <div class="scroll-section gradient-bg">
-        <div class="floating-element">
-            <h1 class="mlody-title">MLody</h1>
-        </div>
-        <p class="mlody-subtitle">Find your rhythm in the data.</p>
-        <div style="margin-top: 50px; animation: bounce 2s infinite; color: #555;">
-            ↓ Scroll to discover
-        </div>
+<div class="scroll-section">
+    <div class="floating-element">
+        <h1 class="mlody-title" style="font-size: 8rem; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(255,255,255,0.3);">
+            <span class="highlight" style="color: #ffffff;">ML</span><span class="standard-text" style="color: #ffffff;">ody</span>
+        </h1>
     </div>
+    <p class="mlody-subtitle" style="font-size: 2rem; color: #cccccc;">Find your rhythm in the data.</p>
+</div>
 """,
     unsafe_allow_html=True,
 )
