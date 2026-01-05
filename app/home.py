@@ -29,14 +29,14 @@ if "scaler" not in st.session_state:
 
 st.markdown(
     """
-<div class="scroll-section">
-    <div class="floating-element">
-        <h1 class="mlody-title" style="font-size: 8rem; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(255,255,255,0.3);">
-            <span class="highlight" style="color: #ffffff;">ML</span><span class="standard-text" style="color: #ffffff;">ody</span>
-        </h1>
+    <div class="scroll-section">
+        <div class="floating-element">
+            <h1 class="mlody-title" style="font-size: 8rem; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(255,255,255,0.3);">
+                <span class="highlight" style="color: #ffffff;">ML</span><span class="standard-text" style="color: #ffffff;">ody</span>
+            </h1>
+        </div>
+        <p class="mlody-subtitle" style="font-size: 2rem; color: #cccccc;">Find your rhythm in the data.</p>
     </div>
-    <p class="mlody-subtitle" style="font-size: 2rem; color: #cccccc;">Find your rhythm in the data.</p>
-</div>
 """,
     unsafe_allow_html=True,
 )
@@ -44,33 +44,15 @@ st.markdown(
 st.markdown(
     """
     <div class="scroll-section">
-        <p class="feature-text">
-            Streaming algorithms are <span style="color: #ff3b30;">broken.</span>
-        </p>
-        <p style="font-size: 24px; color: #6e6e73; max-width: 600px; text-align: center; margin-top: 20px;">
-            They rely on what <i>other</i> people like. <br>
-            But your ears are unique.
-        </p>
-    </div>
-""",
-    unsafe_allow_html=True,
-)
-
-col1, col2 = st.columns([1, 1])
-st.markdown(
-    """
-    <div class="scroll-section gradient-bg">
-        <p class="feature-text">
-            Powered by <span class="accent">Active Learning.</span>
-        </p>
-        <div style="display: flex; gap: 40px; margin-top: 50px;">
-            <div style="text-align: center;">
-                <h2 style="font-size: 40px; margin: 0;">250</h2>
-                <p style="color: #888;">Decision Trees</p>
-            </div>
-            <div style="text-align: center;">
-                <h2 style="font-size: 40px; margin: 0;">100%</h2>
-                <p style="color: #888;">Private (In-Memory)</p>
+        <div class="scroll-entrance-wrapper">
+            <div class="glass-card style="width: 100%;"">
+                <p class="problem-title">
+                    Streaming algorithms are <span class="highlight-error">broken.</span>
+                </p>
+                <p class="problem-desc">
+                    They rely on what <i>everyone else</i> likes.<br>
+                    But your ears are unique. Why settle for an average?
+                </p>
             </div>
         </div>
     </div>
@@ -92,6 +74,6 @@ st.markdown(
 _, btn_col, _ = st.columns([1, 1, 1])
 with btn_col:
     if st.button("Start Listening 🎧", use_container_width=True):
-        st.switch_page("pages/1_🧬_Build_Profile.py")
+        st.switch_page("pages/build_profile.py")
 
 st.markdown("</div>", unsafe_allow_html=True)
