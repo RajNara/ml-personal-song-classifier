@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.join(current_dir, "..")
 sys.path.append(root_dir)
 
-from src.ui_styles import (
+from app.ui_styles import (
     apply_global_styles,
     apply_landing_page_styles,
     add_home_music_line,
