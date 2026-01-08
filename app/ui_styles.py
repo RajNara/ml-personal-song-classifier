@@ -188,3 +188,56 @@ def add_home_music_line():
     """,
         unsafe_allow_html=True,
     )
+
+
+def apply_build_profile_styles():
+    st.markdown(
+        """
+        <style>
+        .album-wrapper {
+            position: relative; width: 70px; height: 70px;
+            border-radius: 8px; overflow: hidden; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s ease;
+        }
+        .album-wrapper:hover { transform: scale(1.05); }
+        
+        .album-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .play-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+            justify-content: center; opacity: 0; transition: opacity 0.2s ease;
+        }
+        .album-wrapper:hover .play-overlay { opacity: 1; }
+        .play-icon { font-size: 24px; color: white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+        
+        .quiz-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .intro-container { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background-color: #050505; z-index: 9999;
+        }
+        .intro-text {
+            font-size: 60px; font-weight: 700;
+            background: linear-gradient(90deg, #7928CA, #4CD2F0); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            opacity: 0; 
+            animation: fadeInOut 3.5s ease-in-out forwards;
+        }
+        
+        @keyframes fadeInOut { 
+            0%   { opacity: 0; transform: translateY(20px); } 
+            20%  { opacity: 1; transform: translateY(0); }
+            80%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); } 
+        }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
