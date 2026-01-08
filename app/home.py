@@ -117,7 +117,7 @@ Watch your data evolve into your unique MLody in real-time.
 
 _, btn_col, _ = st.columns([1, 1, 1])
 with btn_col:
-    if st.button("Start the Process 🎧", use_container_width=True):
+    if st.button("Start Listening 🎧", use_container_width=True):
         st.switch_page("pages/build_profile.py")
 
 st.markdown(

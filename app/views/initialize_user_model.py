@@ -2,20 +2,29 @@ import streamlit as st
 import time
 
 
-def add_song(song, category="liked"):
+def add_song(song, category):
     target = (
         st.session_state.liked_songs
         if category == "liked"
         else st.session_state.disliked_songs
     )
-    # Prevent duplicates
     if not any(s["id"] == song["id"] for s in target):
         target.append(song)
-        st.toast(f"Added {song['name']} to {category}!", icon="🎵")
+        st.toast(f"Sequenced: {song['name']}", icon="🧬")
+
+
+def remove_song(song_id, category):
+    target = (
+        st.session_state.liked_songs
+        if category == "liked"
+        else st.session_state.disliked_songs
+    )
+    st.session_state[f"{category}_songs"] = [s for s in target if s["id"] != song_id]
+    st.rerun()
 
 
 def initialize_user_model(client):
-    # --- INTRO SEQUENCE (Runs Once) ---
+    # --- INTRO SEQUENCE ---
     if not st.session_state.intro_done:
         placeholder = st.empty()
         messages = [
@@ -23,169 +32,220 @@ def initialize_user_model(client):
             "We need some baseline data.",
             "Let's start with what you know.",
         ]
-
-        for i, msg in enumerate(messages):
+        for msg in messages:
             placeholder.empty()
             time.sleep(0.1)
             placeholder.markdown(
-                f"""
-                <div class="intro-container">
-                    <h1 id="msg-{i}" class="intro-text">{msg}</h1>
-                </div>
-            """,
+                f"""<div class="intro-container"><h1 class="intro-text">{msg}</h1></div>""",
                 unsafe_allow_html=True,
             )
-            time.sleep(3.5)
-
+            time.sleep(3)
         placeholder.empty()
         st.session_state.intro_done = True
         st.rerun()
 
-    # --- MAIN SPLIT LAYOUT ---
-    left_col, right_col = st.columns([1.4, 1], gap="large")
+    # --- LAYOUT ---
+    # Using a 60/40 split for a "Dashboard" feel
+    left_col, right_col = st.columns([1.6, 1], gap="large")
 
-    # === LEFT COLUMN: SEARCH ===
+    # ==========================
+    # LEFT: SEARCH INTERFACE
+    # ==========================
     with left_col:
         st.markdown(
             """
-            <h1 style='font-size: 50px; margin-bottom: 0px;'>Build your DNA 🧬</h1>
-            <p style='color: #888; font-size: 18px; margin-bottom: 20px;'>Search for songs to build your baseline model.</p>
+            <h1 style='font-size: 48px; font-weight: 800; margin-bottom: 0px;'>
+                <span style='color:white'>Build your</span> <span class='highlight'>DNA</span> 🧬
+            </h1>
+            <p style='color: #888; font-size: 16px; margin-bottom: 30px;'>
+                Search for tracks to establish your baseline audio profile.
+            </p>
         """,
             unsafe_allow_html=True,
         )
 
+        # Search Bar
         search_query = st.text_input(
-            "Search for a song...",
-            placeholder="Type 'Starboy' or 'Daft Punk'...",
-            label_visibility="collapsed",
+            "Search", placeholder="Search for a track...", label_visibility="collapsed"
         )
 
+        # Results Area
         if search_query:
             st.markdown("<br>", unsafe_allow_html=True)
-            # Use the 'client' passed from the main page
-            raw_results = client.search_tracks(search_query, limit=3)
+            results = client.search_tracks(
+                search_query, limit=4
+            )  # Increased limit slightly
 
-            for item in raw_results:
+            if not results:
+                st.info("No tracks found. Try a different spelling.")
+
+            for item in results:
                 song = {
                     "id": item.get("trackId"),
                     "name": item.get("trackName"),
                     "artist": item.get("artistName"),
-                    "img": item.get("artworkUrl100", "https://placehold.co/100"),
+                    "img": item.get(
+                        "artworkUrl100", "https://placehold.co/80"
+                    ),  # standard size
                     "preview": item.get("previewUrl"),
                 }
 
-                # GLASS STRIP UI
+                # --- RESULT CARD ---
                 with st.container():
-                    c_img, c_info, c_btn1, c_btn2 = st.columns([1, 3.5, 1.2, 1.2])
+                    # Layout: Image | Info | Buttons
+                    c1, c2, c3, c4 = st.columns([1.2, 3.5, 1, 1])
 
-                    with c_img:
-                        preview_src = song["preview"] if song["preview"] else ""
-
-                        if preview_src:
+                    with c1:
+                        # Audio Player logic
+                        if song["preview"]:
                             st.markdown(
                                 f"""
-                                <audio id="audio_{song['id']}" src="{preview_src}"></audio>
-                                
-                                <div class="album-wrapper" 
-                                     onclick="
-                                         var audio = document.getElementById('audio_{song['id']}');
-                                         document.querySelectorAll('audio').forEach(el => el.pause()); 
-                                         if (audio) audio.play();
-                                     "
-                                     title="Click to preview">
+                                <audio id="aud_{song['id']}" src="{song['preview']}"></audio>
+                                <div class="album-wrapper" onclick="document.getElementById('aud_{song['id']}').play()">
                                     <img src="{song['img']}" class="album-img">
-                                    <div class="play-overlay">
-                                        <div class="play-icon">▶</div>
-                                    </div>
+                                    <div class="play-overlay"><div class="play-icon">▶</div></div>
                                 </div>
                             """,
                                 unsafe_allow_html=True,
                             )
                         else:
-                            st.image(song["img"], width=70)
+                            st.image(song["img"], width=80)
 
-                    with c_info:
+                    with c2:
                         st.markdown(
                             f"""
-                            <div style="display: flex; flex-direction: column; justify-content: center; height: 70px;">
-                                <div class="track-name" style="font-size: 18px;">{song['name']}</div>
-                                <div class="track-artist" style="font-size: 14px;">{song['artist']}</div>
+                            <div style="padding-top: 10px;">
+                                <div style="font-size: 18px; font-weight: 600; color: #fff;">{song['name']}</div>
+                                <div style="font-size: 14px; color: #4CD2F0;">{song['artist']}</div>
                             </div>
                         """,
                             unsafe_allow_html=True,
                         )
 
-                    with c_btn1:
+                    # Action Buttons
+                    with c3:
                         st.markdown(
-                            '<div style="height: 10px;"></div>', unsafe_allow_html=True
+                            '<div style="height: 15px;"></div>', unsafe_allow_html=True
                         )
                         if st.button(
-                            "💚", key=f"l_{song['id']}", use_container_width=True
+                            "💚",
+                            key=f"add_l_{song['id']}",
+                            help="Add to Vibes",
+                            use_container_width=True,
                         ):
                             add_song(song, "liked")
 
-                    with c_btn2:
+                    with c4:
                         st.markdown(
-                            '<div style="height: 10px;"></div>', unsafe_allow_html=True
+                            '<div style="height: 15px;"></div>', unsafe_allow_html=True
                         )
                         if st.button(
-                            "❌", key=f"d_{song['id']}", use_container_width=True
+                            "❌",
+                            key=f"add_d_{song['id']}",
+                            help="Add to Filter",
+                            use_container_width=True,
                         ):
                             add_song(song, "disliked")
 
+                # Divider
                 st.markdown(
-                    '<hr style="border-color: rgba(255,255,255,0.08); margin: 8px 0 16px 0;">',
+                    '<hr style="border-color: rgba(255,255,255,0.05); margin: 15px 0;">',
                     unsafe_allow_html=True,
                 )
 
-    # === RIGHT COLUMN: LISTS ===
+    # ==========================
+    # RIGHT: DNA DASHBOARD
+    # ==========================
     with right_col:
-        # 1. LIKES
-        st.markdown("### 💚 Your Vibes")
+        # We use a container to create a background panel effect
         with st.container(border=True):
+            # --- POSITIVE SIGNAL SECTION ---
+            st.markdown(
+                '<div class="panel-header-pos">💚 Positive Signal</div>',
+                unsafe_allow_html=True,
+            )
+
             if not st.session_state.liked_songs:
-                st.info("Search for songs to add them here.")
+                st.markdown(
+                    """
+                    <div style="text-align: center; padding: 20px; color: #444; border: 1px dashed #333; border-radius: 10px;">
+                        Waiting for input...
+                    </div>
+                """,
+                    unsafe_allow_html=True,
+                )
             else:
-                cols = st.columns(3)
-                for i, song in enumerate(st.session_state.liked_songs):
-                    with cols[i % 3]:
-                        st.image(
-                            song.get("img", "https://placehold.co/100"),
-                            use_container_width=True,
-                        )
+                for s in st.session_state.liked_songs:
+                    # Using columns inside the container for the "Capsule" look
+                    # Note: We can't put buttons inside HTML, so we use columns
+                    cap_c1, cap_c2, cap_c3 = st.columns([0.8, 3, 0.5])
+                    with cap_c1:
+                        st.image(s["img"], width=40)
+                    with cap_c2:
                         st.markdown(
-                            f"<div style='font-size: 12px; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{song['name']}</div>",
+                            f"""
+                            <div style="line-height: 1.2; margin-top: 2px;">
+                                <div style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{s['name']}</div>
+                                <div style="font-size: 11px; color: #888;">{s['artist']}</div>
+                            </div>
+                        """,
                             unsafe_allow_html=True,
                         )
+                    with cap_c3:
+                        if st.button("✖", key=f"rem_l_{s['id']}", help="Remove"):
+                            remove_song(s["id"], "liked")
 
-        st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(
+                        '<div style="height: 5px;"></div>', unsafe_allow_html=True
+                    )
 
-        # 2. DISLIKES
-        st.markdown("### ❌ Hard Pass")
-        with st.container(border=True):
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # --- NEGATIVE SIGNAL SECTION ---
+            st.markdown(
+                '<div class="panel-header-neg">❌ Negative Noise</div>',
+                unsafe_allow_html=True,
+            )
+
             if not st.session_state.disliked_songs:
-                st.caption("Optional: Add songs you hate to refine the model.")
+                st.markdown(
+                    """
+                    <div style="text-align: center; padding: 20px; color: #444; border: 1px dashed #333; border-radius: 10px;">
+                        Optional filter...
+                    </div>
+                """,
+                    unsafe_allow_html=True,
+                )
             else:
-                cols = st.columns(3)
-                for i, song in enumerate(st.session_state.disliked_songs):
-                    with cols[i % 3]:
-                        st.image(
-                            song.get("img", "https://placehold.co/100"),
-                            use_container_width=True,
-                        )
+                for s in st.session_state.disliked_songs:
+                    cap_c1, cap_c2, cap_c3 = st.columns([0.8, 3, 0.5])
+                    with cap_c1:
+                        st.image(s["img"], width=40)
+                    with cap_c2:
                         st.markdown(
-                            f"<div style='font-size: 12px; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{song['name']}</div>",
+                            f"""
+                            <div style="line-height: 1.2; margin-top: 2px;">
+                                <div style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{s['name']}</div>
+                                <div style="font-size: 11px; color: #888;">{s['artist']}</div>
+                            </div>
+                        """,
                             unsafe_allow_html=True,
                         )
+                    with cap_c3:
+                        if st.button("✖", key=f"rem_d_{s['id']}", help="Remove"):
+                            remove_song(s["id"], "disliked")
 
-    # --- FOOTER ---
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    _, center_btn, _ = st.columns([1, 1, 1])
-    if center_btn.button(
-        "Analyze & Calibrate ➡️", use_container_width=True, type="primary"
-    ):
-        if len(st.session_state.liked_songs) < 1:
-            st.error("Please add at least 1 song you like!")
-        else:
-            st.session_state.profile_step = "quiz"
-            st.rerun()
+                    st.markdown(
+                        '<div style="height: 5px;"></div>', unsafe_allow_html=True
+                    )
+
+        # --- ACTION FOOTER ---
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button(
+            "🧬 Sequence & Calibrate ➡️", use_container_width=True, type="primary"
+        ):
+            if len(st.session_state.liked_songs) < 1:
+                st.error("Insufficent DNA. Add at least 1 liked song.")
+            else:
+                st.session_state.profile_step = "quiz"
+                st.rerun()
