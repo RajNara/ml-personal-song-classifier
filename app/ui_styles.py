@@ -151,6 +151,91 @@ def apply_landing_page_styles():
     )
 
 
+def apply_build_profile_styles():
+    """
+    PAGE 1 ONLY: Intro + Dividers + Button Overrides.
+    """
+    st.markdown(
+        """
+        <style>
+        /* SLEEK DIVIDER */
+        hr.sleek-divider {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
+            margin: 20px 0;
+        }
+
+        /* INTRO ANIMATION (PRESERVED) */
+        .intro-container { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background-color: #050505; z-index: 9999;
+        }
+        .intro-text {
+            font-size: 60px; font-weight: 700;
+            background: linear-gradient(90deg, #7928CA, #4CD2F0); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            opacity: 0; animation: fadeInOut 3s ease-in-out forwards;
+        }
+        @keyframes fadeInOut { 
+            0% { opacity: 0; transform: translateY(20px); } 
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); } 
+        }
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- BUTTON OVERRIDES --- */
+        
+        /* GENERAL: Prevent wrapping on all buttons */
+        div.stButton > button {
+            white-space: nowrap !important; 
+        }
+
+        /* LIKE BUTTON (Primary) -> Emerald to Cyan Gradient */
+        /* This matches the app's #4CD2F0 accent, effectively removing the harsh green */
+        div.stButton > button[kind="primary"], 
+        div.stButton > button[data-testid="stBaseButton-primary"] {
+            background: linear-gradient(90deg, #10B981 0%, #06B6D4 100%) !important;
+            border: none !important;
+            color: white !important; /* Switched to white for better contrast on teal */
+            font-weight: 800 !important;
+            border-radius: 50px !important;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3) !important;
+        }
+        
+        div.stButton > button[kind="primary"]:hover,
+        div.stButton > button[data-testid="stBaseButton-primary"]:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.6) !important;
+            filter: brightness(1.1) !important;
+        }
+
+        /* DISLIKE BUTTON (Secondary) -> Red to Purple Gradient */
+        /* This matches the app's #7928CA accent */
+        div.stButton > button[kind="secondary"],
+        div.stButton > button[data-testid="stBaseButton-secondary"] {
+            background: linear-gradient(90deg, #F43F5E 0%, #D946EF 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border-radius: 50px !important;
+            box-shadow: 0 4px 15px rgba(217, 70, 239, 0.3) !important;
+        }
+
+        div.stButton > button[kind="secondary"]:hover,
+        div.stButton > button[data-testid="stBaseButton-secondary"]:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.6) !important;
+            filter: brightness(1.1) !important;
+        }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+
 def add_home_music_line():
     st.markdown(
         """
@@ -169,7 +254,6 @@ def add_home_music_line():
         }
         @keyframes flowData { to { stroke-dashoffset: -60; } }
         </style>
-
         <div class="musical-line-container">
             <svg width="100%" height="100%" viewBox="0 0 100 4000" preserveAspectRatio="none">
                 <defs>
@@ -177,7 +261,6 @@ def add_home_music_line():
                         <stop offset="0%" style="stop-color:#7928CA;stop-opacity:0" />
                         <stop offset="10%" style="stop-color:#7928CA;stop-opacity:1" />
                         <stop offset="35%" style="stop-color:#4CD2F0;stop-opacity:1" />
-                        <stop offset="65%" style="stop-color:#007CF0;stop-opacity:1" />
                         <stop offset="90%" style="stop-color:#FF0080;stop-opacity:1" />
                         <stop offset="100%" style="stop-color:#FF0080;stop-opacity:0" />
                     </linearGradient>
@@ -185,81 +268,6 @@ def add_home_music_line():
                 <path d="M -10 100 C 50 100, 50 500, 50 1000 S 90 1500, 50 2000 S 10 2500, 50 3000 S 50 3500, 50 3800" class="neon-path" />
             </svg>
         </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-
-def apply_build_profile_styles():
-    """
-    PAGE 1 ONLY: Intro animation, Album art hover, Quiz cards, and DNA Capsules.
-    """
-    st.markdown(
-        """
-        <style>
-        .album-wrapper {
-            position: relative; width: 80px; height: 80px;
-            border-radius: 12px; overflow: hidden; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.3s ease;
-        }
-        .album-wrapper:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(76, 210, 240, 0.6); }
-        .album-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        .play-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); display: flex; align-items: center;
-            justify-content: center; opacity: 0; transition: opacity 0.2s ease;
-        }
-        .album-wrapper:hover .play-overlay { opacity: 1; }
-        .play-icon { font-size: 28px; color: #fff; filter: drop-shadow(0 0 5px #4CD2F0); }
-
-        .dna-capsule {
-            display: flex; align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 10px;
-            transition: all 0.2s ease;
-        }
-        .dna-capsule:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #4CD2F0;
-        }
-        .capsule-img {
-            width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 12px;
-        }
-        .capsule-info { flex-grow: 1; overflow: hidden; }
-        .capsule-title { font-size: 14px; font-weight: 600; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .capsule-artist { font-size: 12px; color: #aaa; }
-        
-        /* Headers for the panels */
-        .panel-header-pos { color: #4CD2F0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 1px solid rgba(76, 210, 240, 0.3); padding-bottom: 5px; }
-        .panel-header-neg { color: #FF5F6D; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 1px solid rgba(255, 95, 109, 0.3); padding-bottom: 5px; }
-
-        /* --- 3. INTRO ANIMATION (Keep existing) --- */
-        .intro-container { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            background-color: #050505; z-index: 9999;
-        }
-        .intro-text {
-            font-size: 60px; font-weight: 700;
-            background: linear-gradient(90deg, #7928CA, #4CD2F0); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            opacity: 0; animation: fadeInOut 2.5s ease-in-out forwards;
-        }
-        @keyframes fadeInOut { 
-            0%   { opacity: 0; transform: translateY(20px); } 
-            20%  { opacity: 1; transform: translateY(0); }
-            80%  { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); } 
-        }
-        @keyframes fadeInPage { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-        </style>
     """,
         unsafe_allow_html=True,
     )
