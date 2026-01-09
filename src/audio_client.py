@@ -31,23 +31,63 @@ class AudioClient:
             f"{prefix}_max": float(np.max(x)),
         }
 
-    def search_tracks(self, query, limit=5):
+    def search_tracks(self, query, limit=3):
         """
-        Searches for audio tracks using the ITunes Search API.
+        Searches Deezer API instead of iTunes.
+        Deezer has significantly better relevance for specific 'Artist + Song' queries.
+        """
+        # Deezer's search endpoint
+        base_url = "https://api.deezer.com/search"
 
-        Args:
-            query (str): The search query.
-            limit (int): The maximum number of results to return.
-        """
-        params = {"term": query, "media": "music", "entity": "song", "limit": limit}
+        # We request a few more results (10) to ensure we get the best ones,
+        # then slice to 'limit' at the end.
+        params = {"q": query, "limit": 10}
 
         try:
-            response = requests.get(self.base_url, params=params)
+            response = requests.get(base_url, params=params, timeout=5)
             response.raise_for_status()
-            results = response.json().get("results", [])
-            return results
+            data = response.json()
+
+            # Deezer returns a 'data' list
+            raw_results = data.get("data", [])
+
+            # Map Deezer's response to your App's expected format
+            # This ensures the rest of your UI code doesn't break.
+            clean_results = []
+
+            for item in raw_results:
+                clean_results.append(
+                    {
+                        "trackId": item.get("id"),
+                        "trackName": item.get("title"),
+                        # Deezer nests artist info
+                        "artistName": item.get("artist", {}).get("name"),
+                        # Deezer nests album/cover info
+                        "artworkUrl100": item.get("album", {}).get("cover_medium"),
+                        "previewUrl": item.get("preview"),
+                    }
+                )
+
+            # --- OPTIONAL: Smart Re-Ranking ---
+            # Even though Deezer is better, we can still use your 'Token Match' logic
+            # to ensure the absolute best match is #1.
+            query_tokens = set(query.lower().split())
+
+            def get_score(song):
+                title = song["trackName"].lower()
+
+                # Bonus for exact token matches in title
+                title_tokens = set(title.split())
+                matches = query_tokens.intersection(title_tokens)
+                return len(matches)
+
+            # Sort by number of matching words (Highest first)
+            clean_results.sort(key=get_score, reverse=True)
+
+            return clean_results[:limit]
+
         except Exception as e:
-            print(f"Error during search: {e}")
+            print(f"Error during Deezer search: {e}")
             return []
 
     def download_preview(self, preview_url, track_id):
