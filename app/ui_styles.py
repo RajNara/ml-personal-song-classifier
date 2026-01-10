@@ -153,83 +153,132 @@ def apply_landing_page_styles():
 
 def apply_build_profile_styles():
     """
-    PAGE 1 ONLY: Intro + Dividers + Button Overrides.
+    PAGE 1 ONLY: Background + Intro + Buttons + PULSE CIRCLES.
     """
     st.markdown(
         """
         <style>
-        /* SLEEK DIVIDER */
-        hr.sleek-divider {
-            border: 0;
-            height: 1px;
-            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
-            margin: 20px 0;
+        /* 1. DARK GRADIENT BACKGROUND */
+        .stApp {
+            background: linear-gradient(-45deg, #050505, #120a1f, #08111f, #000000) !important;
+            background-size: 400% 400% !important;
+            animation: gradientBG 15s ease infinite !important;
+            background-attachment: fixed !important;
         }
 
-        /* INTRO ANIMATION (PRESERVED) */
-        .intro-container { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 2. THE PULSE CIRCLES (Intro Only) */
+        .pulse-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; overflow: hidden; z-index: 9998;
             display: flex; justify-content: center; align-items: center;
-            background-color: #050505; z-index: 9999;
         }
-        .intro-text {
-            font-size: 60px; font-weight: 700;
-            background: linear-gradient(90deg, #7928CA, #4CD2F0); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            opacity: 0; animation: fadeInOut 3s ease-in-out forwards;
+        .pulse-circle {
+            position: absolute; border: 1px solid rgba(76, 210, 240, 0.15); border-radius: 50%; box-shadow: 0 0 40px rgba(121, 40, 202, 0.1); animation: pulseRipple 10s linear infinite; opacity: 0;
         }
-        @keyframes fadeInOut { 
-            0% { opacity: 0; transform: translateY(20px); } 
-            15% { opacity: 1; transform: translateY(0); }
-            85% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); } 
+        .pulse-1 { animation-delay: 0s; }
+        .pulse-2 { animation-delay: 3.3s; }
+        .pulse-3 { animation-delay: 6.6s; }
+        @keyframes pulseRipple {
+            0% { width: 0; height: 0; opacity: 0.8; border-width: 4px; }
+            100% { width: 150vw; height: 150vw; opacity: 0; border-width: 0px; }
         }
+
+        /* SLEEK DIVIDER */
+        hr.sleek-divider {
+            border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0)); margin: 20px 0;
+        }
+
+        /* INTRO TEXT CONTAINER */
+        .intro-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background-color: transparent !important; backdrop-filter: blur(8px); z-index: 9999; }
+        .intro-text { font-size: 60px; font-weight: 700; background: linear-gradient(90deg, #7928CA, #4CD2F0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; animation: fadeInOut 3s ease-in-out forwards; }
+        @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(20px); } 15% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
         @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- BUTTON OVERRIDES --- */
         
-        /* GENERAL: Prevent wrapping on all buttons */
+        /* 1. GENERAL BUTTON RESET */
         div.stButton > button {
-            white-space: nowrap !important; 
+            white-space: nowrap !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 20px !important;
+            line-height: 1 !important;
+            min-height: 50px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
-        /* LIKE BUTTON (Primary) -> Emerald to Cyan Gradient */
-        /* This matches the app's #4CD2F0 accent, effectively removing the harsh green */
+        /* 2. LIKE BUTTON (Green) */
         div.stButton > button[kind="primary"], 
         div.stButton > button[data-testid="stBaseButton-primary"] {
-            background: linear-gradient(90deg, #10B981 0%, #06B6D4 100%) !important;
-            border: none !important;
-            color: white !important; /* Switched to white for better contrast on teal */
+            background: linear-gradient(135deg, #15803d 0%, #0f766e 100%) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: #f0fdf4 !important;
             font-weight: 800 !important;
             border-radius: 50px !important;
-            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(15, 118, 110, 0.4) !important;
         }
-        
         div.stButton > button[kind="primary"]:hover,
         div.stButton > button[data-testid="stBaseButton-primary"]:hover {
-            transform: scale(1.05) !important;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.6) !important;
-            filter: brightness(1.1) !important;
+            transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(20, 184, 166, 0.6) !important; filter: brightness(1.2) !important;
         }
 
-        /* DISLIKE BUTTON (Secondary) -> Red to Purple Gradient */
-        /* This matches the app's #7928CA accent */
+        /* 3. DISLIKE BUTTON (Red) */
         div.stButton > button[kind="secondary"],
         div.stButton > button[data-testid="stBaseButton-secondary"] {
-            background: linear-gradient(90deg, #F43F5E 0%, #D946EF 100%) !important;
-            border: none !important;
-            color: white !important;
+            background: linear-gradient(135deg, #be123c 0%, #7e22ce 100%) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: #fff1f2 !important;
             font-weight: 800 !important;
             border-radius: 50px !important;
-            box-shadow: 0 4px 15px rgba(217, 70, 239, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(126, 34, 206, 0.4) !important;
         }
-
         div.stButton > button[kind="secondary"]:hover,
         div.stButton > button[data-testid="stBaseButton-secondary"]:hover {
-            transform: scale(1.05) !important;
-            box-shadow: 0 0 20px rgba(217, 70, 239, 0.6) !important;
-            filter: brightness(1.1) !important;
+            transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6) !important; filter: brightness(1.2) !important;
         }
+
+        /* 4. REMOVE BUTTON ("X") - Targeted via .song-list class */
+        /* We make these smaller and less intrusive */
+        .song-list div.stButton > button {
+            min-height: 30px !important;
+            height: 30px !important;
+            width: 30px !important;
+            padding: 0 !important;
+            font-size: 14px !important; /* Smaller 'X' */
+            border-radius: 50% !important; /* Perfect circle */
+            background: rgba(255,255,255,0.1) !important; /* Subtle background */
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            box-shadow: none !important;
+            color: #aaa !important;
+        }
+        .song-list div.stButton > button:hover {
+            background: rgba(255,255,255,0.3) !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* 5. ANALYZE BUTTON - Targeted via .analyze-wrapper class */
+        /* Distinct Blue/Indigo Gradient */
+        .analyze-wrapper div.stButton > button {
+            background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%) !important; /* Electric Blue to Indigo */
+            color: white !important;
+            font-size: 18px !important;
+            min-height: 55px !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5) !important;
+        }
+        .analyze-wrapper div.stButton > button:hover {
+            filter: brightness(1.2) !important;
+            box-shadow: 0 0 25px rgba(79, 70, 229, 0.7) !important;
+        }
+
         </style>
     """,
         unsafe_allow_html=True,

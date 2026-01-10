@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import requests
 
 
 def initialize_user_model(client):
@@ -29,8 +30,20 @@ def initialize_user_model(client):
             target.append(song)
             st.toast(f"Added {song['name']} to {category}", icon="✅")
 
-    # --- INTRO SEQUENCE (PRESERVED) ---
+    # --- INTRO SEQUENCE (WITH PULSE) ---
     if not st.session_state.intro_done:
+        # We inject the pulse container ONLY during the intro
+        st.markdown(
+            """
+            <div class="pulse-container">
+                <div class="pulse-circle pulse-1"></div>
+                <div class="pulse-circle pulse-2"></div>
+                <div class="pulse-circle pulse-3"></div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
         placeholder = st.empty()
         messages = [
             "Initializing your personal model...",
@@ -60,36 +73,33 @@ def initialize_user_model(client):
         st.session_state.has_faded_in = True
 
     # ==========================
-    # UI HEADER
+    # MAIN SPLIT-SCREEN LAYOUT
     # ==========================
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Header spanning both columns
     st.markdown(
         """
-        <h1 style='text-align: center; margin-bottom: 10px;'>Build your Profile 🧬</h1>
-        <p style='text-align: center; color: #888;'>Search for songs to establish your baseline.</p>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style='margin:0;'>Build your Profile 🧬</h1>
+            <p style='color: #888; margin-top:5px;'>Search for songs to establish your baseline.</p>
+        </div>
     """,
         unsafe_allow_html=True,
     )
 
-    # SEARCH BAR (Centered)
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
+    # CREATE TWO COLUMNS
+    col_search, col_dashboard = st.columns([1.5, 1], gap="large")
+
+    # ---------------------------------------------------------
+    # LEFT COLUMN: SEARCH
+    # ---------------------------------------------------------
+    with col_search:
         search_query = st.text_input(
             "Search", placeholder="Type a song name...", label_visibility="collapsed"
         )
 
-    # ==========================
-    # SEARCH RESULTS
-    # ==========================
-    if search_query:
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # CONSTRAIN WIDTH: Use columns so it doesn't stretch edge-to-edge
-        # 1 part padding | 2 parts content | 1 part padding
-        layout_c1, layout_c2, layout_c3 = st.columns([1, 2, 1])
-
-        with layout_c2:
-            results = client.search_tracks(search_query, limit=25)
+        if search_query:
+            st.markdown("<br>", unsafe_allow_html=True)
+            results = client.search_tracks(search_query, limit=3)
 
             if not results:
                 st.info("No tracks found.")
@@ -103,89 +113,95 @@ def initialize_user_model(client):
                     "preview": item.get("previewUrl"),
                 }
 
-                # ROW LAYOUT
-                # Adjusted ratios for cleaner button fit: [1.5, 3.5, 1.5, 1.5]
-                col_img, col_info, col_like, col_dislike = st.columns(
-                    [1.5, 3.5, 1.5, 1.5]
+                # Result Card Layout
+                c_img, c_info, c_like, c_dislike = st.columns(
+                    [1.5, 4, 1.2, 1.2], vertical_alignment="center"
                 )
 
-                with col_img:
-                    # LARGER IMAGE (100px)
-                    st.image(song["img"], width=100)
+                with c_img:
+                    st.image(song["img"], width=80)
 
-                with col_info:
+                with c_info:
                     st.markdown(f"**{song['name']}**")
                     st.caption(song["artist"])
-                    # Native Audio Player
                     if song["preview"]:
                         st.audio(song["preview"], format="audio/mp4")
 
-                with col_like:
-                    st.markdown(
-                        "<div style='height: 10px'></div>", unsafe_allow_html=True
-                    )
-                    # Green Gradient Button
+                with c_like:
                     if st.button(
-                        "Like",
+                        "👍",
                         key=f"l_{song['id']}",
                         type="primary",
                         use_container_width=True,
                     ):
                         add_song(song, "liked")
 
-                with col_dislike:
-                    st.markdown(
-                        "<div style='height: 10px'></div>", unsafe_allow_html=True
-                    )
-                    # Red Gradient Button (Secondary)
+                with c_dislike:
                     if st.button(
-                        "Dislike",
+                        "👎",
                         key=f"d_{song['id']}",
                         type="secondary",
                         use_container_width=True,
                     ):
                         add_song(song, "disliked")
 
-                # SLEEK DIVIDER
                 st.markdown('<hr class="sleek-divider">', unsafe_allow_html=True)
 
-    # ==========================
-    # YOUR SELECTIONS
-    # ==========================
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Your Selections")
+    # ---------------------------------------------------------
+    # RIGHT COLUMN: DASHBOARD (SELECTIONS)
+    # ---------------------------------------------------------
+    with col_dashboard:
+        # Wrap the dashboard in a container for a "Card" look
+        with st.container(border=True):
+            st.markdown(
+                "<h4 style='text-align:center;'>Your Selections</h4>",
+                unsafe_allow_html=True,
+            )
 
-    col_likes, col_dislikes = st.columns(2, gap="large")
-
-    with col_likes:
-        st.markdown("##### 💚 Liked Songs")
-        if not st.session_state.liked_songs:
-            st.caption("No songs added yet.")
-        else:
-            for s in st.session_state.liked_songs:
-                with st.container(border=True):
-                    cl1, cl2 = st.columns([5, 1])
-                    cl1.text(f"{s['name']} - {s['artist']}")
-                    if cl2.button("✖", key=f"rem_l_{s['id']}"):
+            # 1. Liked Section
+            st.markdown("##### 💚 My Vibe")
+            if not st.session_state.liked_songs:
+                st.markdown(
+                    "<div style='color:#666; font-style:italic; font-size:14px;'>No songs added yet...</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                for s in st.session_state.liked_songs:
+                    r1, r2 = st.columns([5, 1], vertical_alignment="center")
+                    r1.markdown(
+                        f"<div style='font-size:14px;'>{s['name']} <span style='color:#888'>- {s['artist']}</span></div>",
+                        unsafe_allow_html=True,
+                    )
+                    if r2.button("✖", key=f"rem_l_{s['id']}"):
                         remove_song(s["id"], "liked")
 
-    with col_dislikes:
-        st.markdown("##### ❌ Disliked Songs")
-        if not st.session_state.disliked_songs:
-            st.caption("No songs added yet.")
-        else:
-            for s in st.session_state.disliked_songs:
-                with st.container(border=True):
-                    cd1, cd2 = st.columns([5, 1])
-                    cd1.text(f"{s['name']} - {s['artist']}")
-                    if cd2.button("✖", key=f"rem_d_{s['id']}"):
+            st.markdown("<hr style='opacity:0.3'>", unsafe_allow_html=True)
+
+            # 2. Disliked Section
+            st.markdown("##### ❌ Blocked")
+            if not st.session_state.disliked_songs:
+                st.markdown(
+                    "<div style='color:#666; font-style:italic; font-size:14px;'>No songs added yet...</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                for s in st.session_state.disliked_songs:
+                    r1, r2 = st.columns([5, 1], vertical_alignment="center")
+                    r1.markdown(
+                        f"<div style='font-size:14px;'>{s['name']} <span style='color:#888'>- {s['artist']}</span></div>",
+                        unsafe_allow_html=True,
+                    )
+                    if r2.button("✖", key=f"rem_d_{s['id']}"):
                         remove_song(s["id"], "disliked")
 
-    # NEXT STEP
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    if st.button("Analyze & Continue ➡️", type="primary", use_container_width=True):
-        if not st.session_state.liked_songs:
-            st.error("Please add at least one liked song.")
-        else:
-            st.session_state.profile_step = "quiz"
-            st.rerun()
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # 3. Next Step Action
+            if st.button(
+                "Analyze & Continue ➡️", type="primary", use_container_width=True
+            ):
+                if not st.session_state.liked_songs:
+                    st.error("Please add at least one liked song.")
+                else:
+                    st.session_state.profile_step = "quiz"
+                    st.rerun()
