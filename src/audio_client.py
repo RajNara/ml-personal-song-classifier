@@ -12,9 +12,9 @@ class AudioClient:
         """
         Initializes the AudioClient with a temporary directory for storing
         audio files
-        Uses the ITunes Search API as the audio source.
+        Uses the Deezer Search API as the audio source.
         """
-        self.base_url = "https://itunes.apple.com/search"
+        self.base_url = "https://api.deezer.com/search"
         self.temp_directory = temp_directory
 
         if not os.path.exists(self.temp_directory):
@@ -33,26 +33,16 @@ class AudioClient:
 
     def search_tracks(self, query, limit=3):
         """
-        Searches Deezer API instead of iTunes.
-        Deezer has significantly better relevance for specific 'Artist + Song' queries.
+        Searches Deezer API for query
         """
-        # Deezer's search endpoint
-        base_url = "https://api.deezer.com/search"
-
-        # We request a few more results (10) to ensure we get the best ones,
-        # then slice to 'limit' at the end.
         params = {"q": query, "limit": 10}
 
         try:
-            response = requests.get(base_url, params=params, timeout=5)
+            response = requests.get(self.base_url, params=params, timeout=5)
             response.raise_for_status()
             data = response.json()
 
-            # Deezer returns a 'data' list
             raw_results = data.get("data", [])
-
-            # Map Deezer's response to your App's expected format
-            # This ensures the rest of your UI code doesn't break.
             clean_results = []
 
             for item in raw_results:
@@ -60,30 +50,21 @@ class AudioClient:
                     {
                         "trackId": item.get("id"),
                         "trackName": item.get("title"),
-                        # Deezer nests artist info
                         "artistName": item.get("artist", {}).get("name"),
-                        # Deezer nests album/cover info
                         "artworkUrl100": item.get("album", {}).get("cover_medium"),
                         "previewUrl": item.get("preview"),
                     }
                 )
 
-            # --- OPTIONAL: Smart Re-Ranking ---
-            # Even though Deezer is better, we can still use your 'Token Match' logic
-            # to ensure the absolute best match is #1.
             query_tokens = set(query.lower().split())
 
             def get_score(song):
                 title = song["trackName"].lower()
-
-                # Bonus for exact token matches in title
                 title_tokens = set(title.split())
                 matches = query_tokens.intersection(title_tokens)
                 return len(matches)
 
-            # Sort by number of matching words (Highest first)
             clean_results.sort(key=get_score, reverse=True)
-
             return clean_results[:limit]
 
         except Exception as e:
