@@ -117,7 +117,29 @@ Watch your data evolve into your unique MLody in real-time.
 
 _, btn_col, _ = st.columns([1, 1, 1])
 with btn_col:
-    if st.button("Start Listening 🎧", use_container_width=True):
+    st.markdown(
+        """
+        <style>
+        .start-listening-btn-wrapper button {
+            background: linear-gradient(90deg, #7928CA, #4CD2F0) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 30px !important;
+            font-size: 18px !important;
+            border-radius: 50px !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(76, 210, 240, 0.4) !important;
+        }
+        .start-listening-btn-wrapper button:hover {
+            transform: scale(1.05) !important;
+            filter: brightness(1.05) !important;
+        }
+        </style>
+        <div class="start-listening-btn-wrapper"></div>
+        """,
+        unsafe_allow_html=True,
+    )
+    if st.button("Start Listening 🎧", use_container_width=True, key="start_listening"):
         st.switch_page("pages/build_profile.py")
 
 st.markdown(

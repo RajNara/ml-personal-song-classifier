@@ -21,15 +21,30 @@ def apply_global_styles():
         
         header, footer {visibility: hidden;}
         
+        /* Keep button layout but DO NOT override background or color here
+           to avoid unintentionally recoloring Streamlit primary/secondary buttons. */
         div.stButton > button {
-            background: linear-gradient(90deg, #7928CA, #4CD2F0); 
-            color: black; border: none;
             padding: 12px 30px; font-size: 18px; border-radius: 50px;
             font-weight: 700; 
-            box-shadow: 0 4px 15px rgba(76, 210, 240, 0.4);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.15s ease;
+            border: 0 !important;
         }
-        div.stButton > button:hover { transform: scale(1.05); filter: brightness(1.2); }
+        div.stButton > button:not([kind="secondary"]) {
+            padding: 12px 30px; font-size: 18px; border-radius: 50px;
+            font-weight: 700; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.15s ease;
+            border: 0 !important;
+        }
+        div.stButton > button[kind="secondary"] {
+            padding: 12px 30px; font-size: 18px; border-radius: 50px;
+            font-weight: 700; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.15s ease;
+            border: 0 !important;
+        }
+        div.stButton > button:hover { transform: scale(1.02); }
         
         .stTextArea textarea, .stTextInput input {
             background-color: #111; color: #ddd; 
@@ -145,6 +160,21 @@ def apply_landing_page_styles():
         .accent { color: #4CD2F0; text-shadow: 0 0 15px rgba(76, 210, 240, 0.4); }
         .floating-element { animation: float 6s ease-in-out infinite; padding: 20px; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+        /* Start Listening button on home page - higher specificity to override global transparent background */
+        .start-listening-btn-wrapper div.stButton > button {
+            background: linear-gradient(90deg, #7928CA, #4CD2F0) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 30px !important;
+            font-size: 18px !important;
+            border-radius: 50px !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(76, 210, 240, 0.4) !important;
+        }
+        .start-listening-btn-wrapper div.stButton > button:hover {
+            transform: scale(1.05) !important;
+            filter: brightness(1.05) !important;
+        }
         </style>
     """,
         unsafe_allow_html=True,
@@ -214,19 +244,20 @@ def apply_build_profile_styles():
             justify-content: center !important;
         }
 
-        /* 2. LIKE BUTTON (Green) */
-        div.stButton > button[kind="primary"], 
-        div.stButton > button[data-testid="stBaseButton-primary"] {
-            background: linear-gradient(135deg, #15803d 0%, #0f766e 100%) !important;
+        /* 2. LIKE BUTTON (Green) - override Streamlit's inline styles */
+        div.stButton > button[kind="primary"],
+        div[data-testid="stBaseButton-primary"] {
+            background-color: #15803d !important;
+            background: #15803d !important;
             border: 1px solid rgba(255,255,255,0.1) !important;
             color: #f0fdf4 !important;
             font-weight: 800 !important;
             border-radius: 50px !important;
-            box-shadow: 0 4px 15px rgba(15, 118, 110, 0.4) !important;
+            box-shadow: 0 4px 15px rgba(21, 128, 61, 0.6) !important;
         }
         div.stButton > button[kind="primary"]:hover,
-        div.stButton > button[data-testid="stBaseButton-primary"]:hover {
-            transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(20, 184, 166, 0.6) !important; filter: brightness(1.2) !important;
+        div[data-testid="stBaseButton-primary"]:hover {
+            transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(21, 128, 61, 0.8) !important; filter: brightness(1.2) !important;
         }
 
         /* 3. DISLIKE BUTTON (Red) */
@@ -244,40 +275,35 @@ def apply_build_profile_styles():
             transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6) !important; filter: brightness(1.2) !important;
         }
 
-        /* 4. REMOVE BUTTON ("X") - Targeted via .song-list class */
-        /* We make these smaller and less intrusive */
-        .song-list div.stButton > button {
-            min-height: 30px !important;
-            height: 30px !important;
-            width: 30px !important;
+        /* 4. REMOVE BUTTON ("X") - Solid red styling, very small */
+        button[aria-label="✖"],
+        .stApp button[aria-label="✖"],
+        [role="button"][aria-label="✖"] {
+            width: 8px !important;
+            height: 8px !important;
+            min-width: 8px !important;
+            min-height: 8px !important;
+            max-width: 8px !important;
+            max-height: 8px !important;
             padding: 0 !important;
-            font-size: 14px !important; /* Smaller 'X' */
-            border-radius: 50% !important; /* Perfect circle */
-            background: rgba(255,255,255,0.1) !important; /* Subtle background */
-            border: 1px solid rgba(255,255,255,0.2) !important;
+            margin: 0 !important;
+            font-size: 6px !important;
+            line-height: 8px !important;
+            border-radius: 50% !important;
+            background: #991B1B !important;
+            border: 0 !important;
             box-shadow: none !important;
-            color: #aaa !important;
-        }
-        .song-list div.stButton > button:hover {
-            background: rgba(255,255,255,0.3) !important;
             color: white !important;
-            transform: scale(1.1) !important;
+        }
+        button[aria-label="✖"]:hover,
+        .stApp button[aria-label="✖"]:hover,
+        [role="button"][aria-label="✖"]:hover {
+            background: #B91C1C !important;
+            transform: scale(1.2) !important;
+            cursor: pointer !important;
         }
 
-        /* 5. ANALYZE BUTTON - Targeted via .analyze-wrapper class */
-        /* Distinct Blue/Indigo Gradient */
-        .analyze-wrapper div.stButton > button {
-            background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%) !important; /* Electric Blue to Indigo */
-            color: white !important;
-            font-size: 18px !important;
-            min-height: 55px !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5) !important;
-        }
-        .analyze-wrapper div.stButton > button:hover {
-            filter: brightness(1.2) !important;
-            box-shadow: 0 0 25px rgba(79, 70, 229, 0.7) !important;
-        }
+        /* 5. ANALYZE BUTTON - Handled by inline styles in Python */
 
         </style>
     """,
