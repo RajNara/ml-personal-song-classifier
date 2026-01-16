@@ -66,7 +66,7 @@ st.markdown(
 <div class="glass-card" style="max-width: 1200px; padding: 60px 40px; width: 90%;">
 
 <p class="feature-text" style="font-size: 50px; margin-bottom: 50px;">
-From Taste to your <span class="accent">MLody.</span>
+From raw songs to your <span class="accent">MLody.</span>
 </p>
 
 <div style="display: flex; justify-content: center; align-items: flex-start; gap: 40px; flex-wrap: wrap;">

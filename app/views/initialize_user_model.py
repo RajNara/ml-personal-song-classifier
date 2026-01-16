@@ -8,7 +8,6 @@ def initialize_user_model(client):
     Uses a form-based search to prevent duplicate widget issues.
     """
 
-    # --- HELPER FUNCTIONS ---
     def remove_song(song_id, category="liked"):
         target_key = f"{category}_songs"
         st.session_state[target_key] = [
@@ -18,30 +17,30 @@ def initialize_user_model(client):
     def add_song(song, category="liked"):
         target_key = f"{category}_songs"
         target = st.session_state[target_key]
-        # Prevent cross-list duplicates: if song exists in the opposite list, show an error
         if category == "disliked":
             if any(
                 s["id"] == song["id"] for s in st.session_state.get("liked_songs", [])
             ):
-                st.error(
-                    "This song is already in My Vibe. Remove it there before blocking."
+                st.toast(
+                    "This song is already in your liked songs. Remove it there before disliking."
                 )
-                return
+                return False
         elif category == "liked":
             if any(
                 s["id"] == song["id"]
                 for s in st.session_state.get("disliked_songs", [])
             ):
-                st.error(
-                    "This song is already in Blocked. Remove it there before liking."
+                st.toast(
+                    "This song is already in your disliked songs. Remove it there before liking."
                 )
-                return
+                return False
 
         if not any(s["id"] == song["id"] for s in target):
             target.append(song)
-            st.toast(f"Added {song['name']} to {category}", icon="✅")
+            return True
+        else:
+            return False
 
-    # --- INTRO SEQUENCE ---
     if not st.session_state.intro_done:
         st.markdown(
             """
@@ -72,7 +71,6 @@ def initialize_user_model(client):
         st.session_state.intro_done = True
         st.rerun()
 
-    # --- PAGE HEADER ---
     st.markdown(
         """
         <div style="text-align: center; margin-bottom: 20px;">
@@ -83,14 +81,9 @@ def initialize_user_model(client):
         unsafe_allow_html=True,
     )
 
-    # --- TWO COLUMN LAYOUT ---
     col_search, col_dashboard = st.columns([1.5, 1], gap="large")
 
-    # ---------------------------------------------------------
-    # LEFT COLUMN: SEARCH (using a form to prevent rerun issues)
-    # ---------------------------------------------------------
     with col_search:
-        # Use a form to handle search submission cleanly
         with st.form(key="search_form", clear_on_submit=False):
             search_query = st.text_input(
                 "Search",
@@ -101,11 +94,9 @@ def initialize_user_model(client):
                 "Search 🔍", use_container_width=True
             )
 
-        # Store search query in session state for persistence
         if search_submitted and search_query:
             st.session_state.current_search = search_query
 
-        # Display results if we have a search
         current_query = st.session_state.get("current_search", "")
 
         if current_query:
@@ -123,7 +114,6 @@ def initialize_user_model(client):
                         "preview": item.get("previewUrl"),
                     }
 
-                    # Result Card Layout
                     c_img, c_info, c_like, c_dislike = st.columns(
                         [1.5, 4, 1.2, 1.2], vertical_alignment="center"
                     )
@@ -144,8 +134,8 @@ def initialize_user_model(client):
                             type="primary",
                             use_container_width=True,
                         ):
-                            add_song(song, "liked")
-                            st.rerun()
+                            if add_song(song, "liked"):
+                                st.rerun()
 
                     with c_dislike:
                         if st.button(
@@ -154,14 +144,11 @@ def initialize_user_model(client):
                             type="secondary",
                             use_container_width=True,
                         ):
-                            add_song(song, "disliked")
-                            st.rerun()
+                            if add_song(song, "disliked"):
+                                st.rerun()
 
                     st.markdown('<hr class="sleek-divider">', unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
-    # RIGHT COLUMN: DASHBOARD
-    # ---------------------------------------------------------
     with col_dashboard:
         with st.container(border=True):
             st.markdown(
@@ -169,9 +156,8 @@ def initialize_user_model(client):
                 unsafe_allow_html=True,
             )
 
-            # Liked Section (larger text, left-aligned)
             st.markdown(
-                "<div style='font-size:18px; font-weight:700; margin-top:6px;'>💚 My Vibe</div>",
+                "<div style='font-size:18px; font-weight:700; margin-top:6px;'>💚 Likes</div>",
                 unsafe_allow_html=True,
             )
             if not st.session_state.liked_songs:
@@ -181,29 +167,36 @@ def initialize_user_model(client):
                 )
             else:
                 for i, s in enumerate(st.session_state.liked_songs):
-                    r1, r2 = st.columns([5, 1], vertical_alignment="center")
-                    r1.markdown(
-                        f"<div style='text-align:left;'><div style='font-size:16px; font-weight:600;'>{s['name']}</div><div style='font-size:13px; color:#888; margin-top:4px;'>{s['artist']}</div></div>",
-                        unsafe_allow_html=True,
-                    )
-                    with r2:
-                        st.markdown("<div class='remove-btn'>", unsafe_allow_html=True)
-                        if st.button("✕", key=f"remove_liked_{s['id']}"):
+                    col_song, col_btn = st.columns([5, 1], vertical_alignment="center")
+                    with col_song:
+                        st.markdown(
+                            f"<div style='text-align:center;'><strong>{s['name']}</strong></div>",
+                            unsafe_allow_html=True,
+                        )
+                        st.markdown(
+                            f"<div style='text-align:center; color:#888; font-size:13px;'>{s['artist']}</div>",
+                            unsafe_allow_html=True,
+                        )
+                    with col_btn:
+                        if st.button(
+                            "❌", key=f"remove_liked_{s['id']}", use_container_width=True
+                        ):
                             remove_song(s["id"], "liked")
+                            st.toast(f"Removed {s['name']} from Likes", icon="🗑️")
                             st.rerun()
-                        st.markdown("</div>", unsafe_allow_html=True)
                     # faint divider between items
                     if i < len(st.session_state.liked_songs) - 1:
                         st.markdown(
-                            '<hr style="opacity:0.18; margin:12px 0; border:none; height:1px; background:rgba(255,255,255,0.06);">',
-                            unsafe_allow_html=True,
+                            '<hr class="sleek-divider">', unsafe_allow_html=True
                         )
 
-            st.markdown("<hr style='opacity:0.3'>", unsafe_allow_html=True)
-
-            # Disliked Section (larger text, left-aligned)
             st.markdown(
-                "<div style='font-size:18px; font-weight:700; margin-top:12px;'>❌ Blocked</div>",
+                "<div style='border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;'></div>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(
+                "<div style='font-size:18px; font-weight:700; margin-top:12px;'>❌ Dislikes</div>",
                 unsafe_allow_html=True,
             )
             if not st.session_state.disliked_songs:
@@ -213,28 +206,31 @@ def initialize_user_model(client):
                 )
             else:
                 for i, s in enumerate(st.session_state.disliked_songs):
-                    r1, r2 = st.columns([5, 1], vertical_alignment="center")
-                    r1.markdown(
-                        f"<div style='text-align:left;'><div style='font-size:16px; font-weight:600;'>{s['name']}</div><div style='font-size:13px; color:#888; margin-top:4px;'>{s['artist']}</div></div>",
-                        unsafe_allow_html=True,
-                    )
-                    with r2:
-                        st.markdown("<div class='remove-btn'>", unsafe_allow_html=True)
-                        if st.button("✕", key=f"remove_disliked_{s['id']}"):
+                    col_song, col_btn = st.columns([5, 1], vertical_alignment="center")
+                    with col_song:
+                        st.markdown(
+                            f"<div style='text-align:center;'><strong>{s['name']}</strong></div>",
+                            unsafe_allow_html=True,
+                        )
+                        st.markdown(
+                            f"<div style='text-align:center; color:#888; font-size:13px;'>{s['artist']}</div>",
+                            unsafe_allow_html=True,
+                        )
+                    with col_btn:
+                        if st.button(
+                            "❌",
+                            key=f"remove_disliked_{s['id']}",
+                            use_container_width=True,
+                        ):
                             remove_song(s["id"], "disliked")
+                            st.toast(f"Removed {s['name']} from Dislikes", icon="🗑️")
                             st.rerun()
-                        st.markdown("</div>", unsafe_allow_html=True)
                     # faint divider between items
                     if i < len(st.session_state.disliked_songs) - 1:
                         st.markdown(
-                            '<hr style="opacity:0.18; margin:12px 0; border:none; height:1px; background:rgba(255,255,255,0.06);">',
-                            unsafe_allow_html=True,
+                            '<hr class="sleek-divider">', unsafe_allow_html=True
                         )
 
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            # Analyze Button - wrapped with custom class for CSS targeting
-            st.markdown("<div class='analyze-btn-container'>", unsafe_allow_html=True)
             if st.button(
                 "Analyze & Continue ➡️",
                 key="btn_analyze_continue",
