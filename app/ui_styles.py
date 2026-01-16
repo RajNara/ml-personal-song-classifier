@@ -153,17 +153,31 @@ def apply_landing_page_styles():
 
 def apply_build_profile_styles():
     """
-    PAGE 1 ONLY: Background + Intro + Buttons + PULSE CIRCLES.
+    Build Profile page styles with multi-color button support.
+    Buttons are targeted by their key attribute using CSS substring selectors.
+
+    Button naming convention for colors:
+    - key="like_*"     -> Green gradient
+    - key="dislike_*"  -> Red/Purple gradient
+    - key="btn_analyze_*" or key="btn_pink_*" -> Pink gradient
+    - key="btn_blue_*" -> Blue gradient
+    - key="remove_*"   -> Subtle gray (small)
     """
     st.markdown(
         """
         <style>
-        /* 1. DARK GRADIENT BACKGROUND */
+        /* ===== PAGE BACKGROUND ===== */
         .stApp {
             background: linear-gradient(-45deg, #050505, #120a1f, #08111f, #000000) !important;
             background-size: 400% 400% !important;
             animation: gradientBG 15s ease infinite !important;
             background-attachment: fixed !important;
+        }
+
+        .block-container {
+            max-width: 1200px !important;
+            padding: 0 3rem 2rem 3rem !important;
+            margin: 0 auto !important;
         }
 
         @keyframes gradientBG {
@@ -172,14 +186,16 @@ def apply_build_profile_styles():
             100% { background-position: 0% 50%; }
         }
 
-        /* 2. THE PULSE CIRCLES (Intro Only) */
+        /* ===== INTRO ANIMATIONS ===== */
         .pulse-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; overflow: hidden; z-index: 9998;
             display: flex; justify-content: center; align-items: center;
         }
         .pulse-circle {
-            position: absolute; border: 1px solid rgba(76, 210, 240, 0.15); border-radius: 50%; box-shadow: 0 0 40px rgba(121, 40, 202, 0.1); animation: pulseRipple 10s linear infinite; opacity: 0;
+            position: absolute; border: 1px solid rgba(76, 210, 240, 0.15); 
+            border-radius: 50%; box-shadow: 0 0 40px rgba(121, 40, 202, 0.1); 
+            animation: pulseRipple 10s linear infinite; opacity: 0;
         }
         .pulse-1 { animation-delay: 0s; }
         .pulse-2 { animation-delay: 3.3s; }
@@ -189,94 +205,191 @@ def apply_build_profile_styles():
             100% { width: 150vw; height: 150vw; opacity: 0; border-width: 0px; }
         }
 
-        /* SLEEK DIVIDER */
-        hr.sleek-divider {
-            border: 0; height: 1px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0)); margin: 20px 0;
+        .intro-container { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            background-color: transparent !important; backdrop-filter: blur(8px); z-index: 9999; 
+        }
+        .intro-text { 
+            font-size: 60px; font-weight: 700; 
+            background: linear-gradient(90deg, #7928CA, #4CD2F0); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            opacity: 0; animation: fadeInOut 3s ease-in-out forwards; 
+        }
+        @keyframes fadeInOut { 
+            0% { opacity: 0; transform: translateY(20px); } 
+            15% { opacity: 1; transform: translateY(0); } 
+            85% { opacity: 1; transform: translateY(0); } 
+            100% { opacity: 0; transform: translateY(-20px); } 
         }
 
-        /* INTRO TEXT CONTAINER */
-        .intro-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background-color: transparent !important; backdrop-filter: blur(8px); z-index: 9999; }
-        .intro-text { font-size: 60px; font-weight: 700; background: linear-gradient(90deg, #7928CA, #4CD2F0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; animation: fadeInOut 3s ease-in-out forwards; }
-        @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(20px); } 15% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
-        @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        hr.sleek-divider {
+            border: 0; height: 1px; 
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0)); 
+            margin: 20px 0;
+        }
 
-        /* --- BUTTON OVERRIDES --- */
-        
-        /* 1. GENERAL BUTTON RESET */
+        /* BUTTON BASE STYLES */
         div.stButton > button {
             white-space: nowrap !important;
             padding: 0.5rem 1rem !important;
-            font-size: 20px !important;
+            font-size: 18px !important;
             line-height: 1 !important;
             min-height: 50px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            border-radius: 50px !important;
+            font-weight: 700 !important;
+            transition: all 0.3s ease !important;
         }
 
-        /* 2. LIKE BUTTON (Green) */
-        div.stButton > button[kind="primary"], 
+        /* ===== MULTI-COLOR BUTTON SYSTEM ===== */
+        /* Target buttons by their key using data-testid attribute substring matching */
+        
+        /* 1. GREEN BUTTONS - primary type buttons (like) */
+        div.stButton > button[kind="primary"],
         div.stButton > button[data-testid="stBaseButton-primary"] {
             background: linear-gradient(135deg, #15803d 0%, #0f766e 100%) !important;
             border: 1px solid rgba(255,255,255,0.1) !important;
             color: #f0fdf4 !important;
-            font-weight: 800 !important;
-            border-radius: 50px !important;
             box-shadow: 0 4px 15px rgba(15, 118, 110, 0.4) !important;
         }
         div.stButton > button[kind="primary"]:hover,
         div.stButton > button[data-testid="stBaseButton-primary"]:hover {
-            transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(20, 184, 166, 0.6) !important; filter: brightness(1.2) !important;
+            transform: scale(1.05) !important; 
+            box-shadow: 0 0 20px rgba(20, 184, 166, 0.6) !important; 
+            filter: brightness(1.2) !important;
         }
 
-        /* 3. DISLIKE BUTTON (Red) */
+        /* 2. RED/PURPLE BUTTONS - secondary type buttons (dislike) */
         div.stButton > button[kind="secondary"],
         div.stButton > button[data-testid="stBaseButton-secondary"] {
             background: linear-gradient(135deg, #be123c 0%, #7e22ce 100%) !important;
             border: 1px solid rgba(255,255,255,0.1) !important;
             color: #fff1f2 !important;
-            font-weight: 800 !important;
-            border-radius: 50px !important;
             box-shadow: 0 4px 15px rgba(126, 34, 206, 0.4) !important;
         }
         div.stButton > button[kind="secondary"]:hover,
         div.stButton > button[data-testid="stBaseButton-secondary"]:hover {
-            transform: scale(1.05) !important; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6) !important; filter: brightness(1.2) !important;
+            transform: scale(1.05) !important; 
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.6) !important; 
+            filter: brightness(1.2) !important;
         }
 
-        /* 4. REMOVE BUTTON ("X") - Targeted via .song-list class */
-        /* We make these smaller and less intrusive */
-        .song-list div.stButton > button {
-            min-height: 30px !important;
-            height: 30px !important;
-            width: 30px !important;
-            padding: 0 !important;
-            font-size: 14px !important; /* Smaller 'X' */
-            border-radius: 50% !important; /* Perfect circle */
-            background: rgba(255,255,255,0.1) !important; /* Subtle background */
+        /* 3. ANALYZE BUTTON - Special styling using custom class */
+        .analyze-btn-container div.stButton > button {
+            background: linear-gradient(135deg, #FFFFFF 0%, #f472b6 100%) !important;
             border: 1px solid rgba(255,255,255,0.2) !important;
-            box-shadow: none !important;
-            color: #aaa !important;
-        }
-        .song-list div.stButton > button:hover {
-            background: rgba(255,255,255,0.3) !important;
-            color: white !important;
-            transform: scale(1.1) !important;
-        }
-
-        /* 5. ANALYZE BUTTON - Targeted via .analyze-wrapper class */
-        /* Distinct Blue/Indigo Gradient */
-        .analyze-wrapper div.stButton > button {
-            background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%) !important; /* Electric Blue to Indigo */
             color: white !important;
             font-size: 18px !important;
             min-height: 55px !important;
+            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.5) !important;
+        }
+        .analyze-btn-container div.stButton > button:hover {
+            transform: scale(1.03) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 25px rgba(244, 114, 182, 0.7) !important;
+        }
+
+        /* 4. BLUE BUTTONS */
+        button[data-testid*="-btn_blue"],
+        div[data-testid*="btn_blue"] button {
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
             border: 1px solid rgba(255,255,255,0.2) !important;
+            color: white !important;
             box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5) !important;
         }
-        .analyze-wrapper div.stButton > button:hover {
-            filter: brightness(1.2) !important;
+        button[data-testid*="-btn_blue"]:hover,
+        div[data-testid*="btn_blue"] button:hover {
+            transform: scale(1.03) !important;
+            filter: brightness(1.15) !important;
             box-shadow: 0 0 25px rgba(79, 70, 229, 0.7) !important;
+        }
+
+        /* 5. ORANGE BUTTONS */
+        button[data-testid*="-btn_orange"],
+        div[data-testid*="btn_orange"] button {
+            background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: white !important;
+            box-shadow: 0 4px 20px rgba(234, 88, 12, 0.5) !important;
+        }
+        button[data-testid*="-btn_orange"]:hover,
+        div[data-testid*="btn_orange"] button:hover {
+            transform: scale(1.03) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important;
+        }
+
+        /* 6. CYAN/TEAL BUTTONS */
+        button[data-testid*="-btn_cyan"],
+        div[data-testid*="btn_cyan"] button {
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: white !important;
+            box-shadow: 0 4px 20px rgba(8, 145, 178, 0.5) !important;
+        }
+        button[data-testid*="-btn_cyan"]:hover,
+        div[data-testid*="btn_cyan"] button:hover {
+            transform: scale(1.03) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.7) !important;
+        }
+
+        /* 7. REMOVE/X BUTTONS - Small solid red buttons (hardcoded size) */
+        .remove-btn div.stButton > button {
+            min-height: 20px !important;
+            height: 20px !important;
+            width: 20px !important;
+            padding: 0 !important;
+            font-size: 12px !important;
+            border-radius: 50% !important;
+            background: #dc2626 !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: white !important;
+        }
+        .remove-btn div.stButton > button:hover {
+            background: #ef4444 !important;
+            color: white !important;
+            transform: scale(1.05) !important;
+        }
+
+        /* Disable hyperlink popups/tooltips by removing pointer events from anchors */
+        .stApp a, .stMarkdown a {
+            pointer-events: none !important;
+            display: none !important;
+        }
+
+        /* Also hide any permalink/anchor icons that might be injected */
+        a[href^="#"], .anchor-link, .stMarkdown .anchor-link {
+            display: none !important;
+            pointer-events: none !important;
+        }
+
+        /* Background examples (commented) - try them by uncommenting one at a time */
+        # .stApp { background: radial-gradient(circle at 10% 20%, #071019 0%, #02040a 30%, #000000 100%) !important; }
+        # .stApp { background: linear-gradient(135deg, #071426 0%, #0b2236 30%, #071026 100%) !important; }
+
+        .stApp { background-image: url('https://images.unsplash.com/photo-1505673542671-2c0f3b9f8f48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center; }
+
+        # .stApp { background: repeating-linear-gradient(45deg, #051021 0px, #051021 10px, #071427 10px, #071427 20px) !important; }
+        */
+
+        /* 8. FORM SUBMIT BUTTON - Search button styling */
+        div[data-testid="stForm"] button[kind="secondaryFormSubmit"],
+        div[data-testid="stForm"] button[type="submit"] {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+        }
+        div[data-testid="stForm"] button[kind="secondaryFormSubmit"]:hover,
+        div[data-testid="stForm"] button[type="submit"]:hover {
+            transform: scale(1.02) !important;
+            filter: brightness(1.15) !important;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6) !important;
         }
 
         </style>
