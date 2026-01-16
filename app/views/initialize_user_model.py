@@ -74,7 +74,7 @@ def initialize_user_model(client):
     st.markdown(
         """
         <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style='margin:0;'>Build your Profile 🧬</h1>
+            <h1 style='margin:0;'>Build your MLody 🧬</h1>
             <p style='color: #888; margin-top:5px;'>Search for songs to establish your baseline.</p>
         </div>
     """,
@@ -231,6 +231,7 @@ def initialize_user_model(client):
                             '<hr class="sleek-divider">', unsafe_allow_html=True
                         )
 
+            st.markdown("</div>", unsafe_allow_html=True)
             if st.button(
                 "Analyze & Continue ➡️",
                 key="btn_analyze_continue",

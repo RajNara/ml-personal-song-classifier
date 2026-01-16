@@ -28,9 +28,7 @@ if "disliked_songs" not in st.session_state:
 if "quiz_index" not in st.session_state:
     st.session_state.quiz_index = 0
 
-# --- INIT AUDIO CLIENT ---
 client = AudioClient()
-
 
 if st.session_state.profile_step == "search":
     initialize_user_model(client)
