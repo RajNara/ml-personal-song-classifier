@@ -71,6 +71,31 @@ class AudioClient:
             print(f"Error during Deezer search: {e}")
             return []
 
+    def get_track(self, track_id):
+        """
+        Fetch a single track by Deezer track ID.
+
+        Returns a dict with keys similar to search_tracks items, or None on failure.
+        """
+        try:
+            url = f"https://api.deezer.com/track/{track_id}"
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            if not data or data.get("error"):
+                return None
+
+            return {
+                "trackId": data.get("id"),
+                "trackName": data.get("title"),
+                "artistName": (data.get("artist") or {}).get("name"),
+                "artworkUrl100": (data.get("album") or {}).get("cover_medium"),
+                "previewUrl": data.get("preview"),
+            }
+        except Exception as e:
+            print(f"Error fetching Deezer track {track_id}: {e}")
+            return None
+
     def download_preview(self, preview_url, track_id):
         """
         Downloads the audio preview for a given track to /data/temp.

@@ -71,6 +71,14 @@ def initialize_user_model(client):
         st.session_state.intro_done = True
         st.rerun()
 
+    # If a transition to the quiz was requested, switch steps directly.
+    if st.session_state.get("start_quiz_fade"):
+        st.session_state.start_quiz_fade = False
+        st.session_state.profile_step = "quiz"
+        st.rerun()
+        return  # Prevent any further rendering
+
+    # page header
     st.markdown(
         """
         <div style="text-align: center; margin-bottom: 20px;">
@@ -240,6 +248,7 @@ def initialize_user_model(client):
                 if not st.session_state.liked_songs:
                     st.error("Please add at least one liked song.")
                 else:
-                    st.session_state.profile_step = "quiz"
+                    # trigger a short fade transition before moving to the quiz
+                    st.session_state.start_quiz_fade = True
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
