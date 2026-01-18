@@ -1,5 +1,11 @@
 import streamlit as st
 import time
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import particles
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from particles import render_particles
 
 
 # --- TARGET DIAGNOSTIC SONGS (ordered) ---
@@ -40,6 +46,15 @@ def render_quiz_step(client):
 
     # Show intro messages before the quiz starts
     if not st.session_state.get("quiz_intro_done"):
+        # Add particles background
+        if "particles_config" not in st.session_state:
+            st.session_state.particles_config = None
+
+        particles_html, st.session_state.particles_config = render_particles(
+            st.session_state.particles_config
+        )
+        st.markdown(particles_html, unsafe_allow_html=True)
+
         st.markdown(
             """
             <div class="pulse-container">
@@ -53,7 +68,7 @@ def render_quiz_step(client):
 
         placeholder = st.empty()
         messages = [
-            "Time to calibrate your taste...",
+            "Time to calibrate your taste.",
             "You'll hear 10 songs.",
             "Tell us if you like them or not.",
         ]
@@ -139,19 +154,41 @@ def render_quiz_step(client):
     current_song = st.session_state.diag_tracks[st.session_state.quiz_index]
     progress = (st.session_state.quiz_index + 1) / len(st.session_state.diag_tracks)
 
+    # Floating particles background - maintain same particles across reruns
+    if "quiz_particles_config" not in st.session_state:
+        st.session_state.quiz_particles_config = None
+
+    particles_html, st.session_state.quiz_particles_config = render_particles(
+        st.session_state.quiz_particles_config
+    )
+    st.markdown(particles_html, unsafe_allow_html=True)
+
     _, main_col, _ = st.columns([1, 2, 1])
 
     with main_col:
-        st.progress(
-            progress,
-            text=f"Calibration: Song {st.session_state.quiz_index + 1} of {len(st.session_state.diag_tracks)}",
+        # Calculate gradient position that grows with progress
+        # The gradient colors should only appear in the filled portion
+        gradient_start = 0
+        gradient_end = progress * 100
+
+        # Modern progress bar - black background, gradient only shows as it grows
+        st.markdown(
+            f"""
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="font-size: 24px; font-weight: 600; color: #4CD2F0; margin: 0 0 20px 0;">Calibration: Song {st.session_state.quiz_index + 1} of {len(st.session_state.diag_tracks)}</h2>
+                <div style="position: relative; width: 100%; height: 8px; background: #0a0a0a; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+                    <div style="position: absolute; left: 0; top: 0; height: 100%; width: {progress * 100}%; background: linear-gradient(to right, #1E90FF 0%, #4CD2F0 33%, #9D50BB 66%, #FF1493 100%); background-size: {100/progress if progress > 0 else 100}% 100%; background-position: left; border-radius: 10px; transition: width 0.3s ease; box-shadow: 0 0 15px rgba(76, 210, 240, 0.6);"></div>
+                </div>
+            </div>
+        """,
+            unsafe_allow_html=True,
         )
 
         # Centered card + more professional header
         st.markdown(
             f"""
             <div style="text-align:center; padding: 10px 0;">
-                <h2 style="color: #ccc; font-weight: 500; margin-bottom: 8px; font-size:18px;">Please indicate whether you like this track</h2>
+                <h2 style="color: #ccc; font-weight: 500; margin-bottom: 8px; font-size:18px;">Do you like this song?</h2>
                 <h1 style="font-size:28px; margin: 0;">{current_song['name']}</h1>
                 <p style="color: #4CD2F0; font-size:14px; margin-top:4px;">{current_song['artist']}</p>
             </div>
@@ -166,10 +203,12 @@ def render_quiz_step(client):
                 unsafe_allow_html=True,
             )
 
-        # Attempt autoplay via HTML5 audio (no JS). Browsers may block autoplay with sound.
+        # Audio player - manual play for first song, autoplay for rest
         if current_song.get("preview"):
+            # Only autoplay after the first song
+            autoplay_attr = "" if st.session_state.quiz_index == 0 else "autoplay"
             st.markdown(
-                f"<div style='text-align:center; margin-bottom:6px;'><audio controls autoplay src=\"{current_song['preview']}\" style=\"width:100%; max-width:520px;\">Your browser does not support the audio element.</audio></div>",
+                f"<div style='text-align:center; margin-bottom:6px;'><audio controls {autoplay_attr} src=\"{current_song['preview']}\" style=\"width:100%; max-width:520px;\">Your browser does not support the audio element.</audio></div>",
                 unsafe_allow_html=True,
             )
         else:

@@ -1,5 +1,11 @@
 import streamlit as st
 import time
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import particles
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from particles import render_particles
 
 
 def initialize_user_model(client):
@@ -77,6 +83,15 @@ def initialize_user_model(client):
         st.session_state.profile_step = "quiz"
         st.rerun()
         return  # Prevent any further rendering
+
+    # Add particles background after intro
+    if "particles_config" not in st.session_state:
+        st.session_state.particles_config = None
+
+    particles_html, st.session_state.particles_config = render_particles(
+        st.session_state.particles_config
+    )
+    st.markdown(particles_html, unsafe_allow_html=True)
 
     # page header
     st.markdown(
