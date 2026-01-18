@@ -343,6 +343,33 @@ def apply_build_profile_styles():
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.6) !important;
         }
 
+        /* ===== COMPLETION / PROFILE BUILT STYLES ===== */
+        .completion-hero h1 {
+            font-size: 56px; font-weight: 800; margin: 0;
+            line-height: 1.05;
+            background: linear-gradient(90deg, #7928CA, #4CD2F0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-wrap: balance;
+        }
+        .completion-hero p { color: #cfcfcf; margin-top: 8px; font-size: 18px; }
+
+        .completion-stats { display: flex; gap: 12px; margin-top: 18px; align-items: center; }
+        .completion-stats .stat-chip {
+            background: rgba(255,255,255,0.03); padding: 14px 18px; border-radius: 12px; min-width: 110px; text-align: center;
+        }
+        .completion-stats .stat-chip .value { font-size: 20px; font-weight: 800; color: #ffffff; }
+        .completion-stats .stat-chip .label { font-size: 12px; color: #9aa0a6; margin-top: 6px; }
+
+        .completion-badge { width: 160px; height: 160px; border-radius: 18px; background: linear-gradient(135deg,#050505, #0b1220); display:flex; align-items:center; justify-content:center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .completion-badge .check { font-size: 48px; font-weight: 900; background: linear-gradient(90deg,#7928CA,#4CD2F0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        @media (max-width: 900px) {
+            .glass-card { flex-direction: column !important; padding: 24px !important; gap: 20px !important; }
+            .completion-badge { width: 120px; height: 120px; }
+            .completion-hero h1 { font-size: 36px; }
+            .completion-stats { flex-wrap: wrap; justify-content: flex-start; }
+        }
+
         </style>
     """,
         unsafe_allow_html=True,
